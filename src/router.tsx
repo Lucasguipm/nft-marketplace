@@ -1,9 +1,4 @@
-import { 
-  Outlet,
-  createRootRoute, 
-  createRoute, 
-  createRouter 
-} from '@tanstack/react-router';
+import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { Home } from './routes/Home.tsx';
 import { Details } from './routes/Details.tsx';
 import { Cart } from './routes/Cart.tsx';
@@ -11,82 +6,112 @@ import { Checkout } from './routes/Checkout.tsx';
 import { Auth } from './routes/Auth.tsx';
 import { Profile } from './routes/Profile.tsx';
 import { Success } from './routes/Success.tsx';
+import { RootLayout } from './components/RootLayout.tsx';
+import { NotFound } from './components/NotFound.tsx';
+import { tokenStore } from './services/api';
+import { CATEGORIES, SORT_OPTIONS } from './services/types';
+import type { Category, SortKey } from './services/types';
 
-// 1. Rota raiz (Layout principal que envolve a aplicação)
+// Rotas privadas: sem token, redireciona para o login e volta ao fluxo depois.
+function requireAuth({ location }: { location: { href: string } }) {
+  if (!tokenStore.get()) {
+    throw redirect({ to: '/login', search: { redirect: location.href } });
+  }
+}
+
 const rootRoute = createRootRoute({
-  component: () => (
-    <div className="min-h-screen bg-[#110a05] text-[#e6d5c3] font-sans selection:bg-amber-600 selection:text-white">
-      <Outlet />
-    </div>
-  ),
+  component: RootLayout,
+  notFoundComponent: NotFound,
 });
 
-// 2. Página Inicial (Catálogo)
+// Busca, filtro, ordenação e página vivem na URL: sobrevivem a refresh e ao botão voltar.
+export interface HomeSearch {
+  q?: string;
+  category?: Category;
+  sort?: SortKey;
+  page?: number;
+}
+
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
+  validateSearch: (search: Record<string, unknown>): HomeSearch => {
+    const page = Number(search.page);
+    return {
+      q: typeof search.q === 'string' && search.q.trim() ? search.q : undefined,
+      category: (CATEGORIES as readonly unknown[]).includes(search.category)
+        ? (search.category as Category)
+        : undefined,
+      sort: SORT_OPTIONS.some((option) => option.value === search.sort)
+        ? (search.sort as SortKey)
+        : undefined,
+      page: Number.isInteger(page) && page > 1 ? page : undefined,
+    };
+  },
   component: Home,
 });
 
-// 3. Página de Carrinho
+const nftRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/nft/$id',
+  component: Details,
+});
+
 const cartRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/cart',
   component: Cart,
 });
 
-// 4. Página de Login
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    // Só aceita caminhos internos (evita redirecionar o usuário para outro site).
+    redirect:
+      typeof search.redirect === 'string' && search.redirect.startsWith('/') && !search.redirect.startsWith('//')
+        ? search.redirect
+        : undefined,
+  }),
   component: Auth,
 });
 
-// 5. Página de Perfil do Colecionador e Página de Carteiras
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile',
+  beforeLoad: requireAuth,
   component: Profile,
 });
 
-// 6. Página de Detalhes do NFT
-const detailsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/details',
-  component: Details,
-});
-
-// 7. Página de Pagamento-Checkout
 const checkoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/checkout',
+  beforeLoad: requireAuth,
   component: Checkout,
 });
 
-// 8. Página de Sucesso após a compra
 const successRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/success',
+  beforeLoad: requireAuth,
   component: Success,
 });
 
-// Agrupamento das rotas
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  nftRoute,
   cartRoute,
   loginRoute,
   profileRoute,
-  detailsRoute,
   checkoutRoute,
   successRoute,
 ]);
 
-// Configuração final do router
-export const router = createRouter({ routeTree });
+export const router = createRouter({ routeTree, defaultPreload: 'intent' });
 
-// Registo de tipos para o TypeScript reconhecer as rotas com segurança
 declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }
 }
+
