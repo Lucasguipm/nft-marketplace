@@ -35,9 +35,25 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Identifica o visitante (sem login) para que o carrinho dele sobreviva ao refresh.
+const GUEST_KEY = 'kurio-guest-id';
+function guestId(): string {
+  try {
+    let id = localStorage.getItem(GUEST_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(GUEST_KEY, id);
+    }
+    return id;
+  } catch {
+    return 'anon';
+  }
+}
+
 api.interceptors.request.use((config) => {
   const token = tokenStore.get();
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  config.headers['X-Guest-Id'] = guestId();
   return config;
 });
 
@@ -69,4 +85,13 @@ export function getErrorMessage(error: unknown, fallback = 'Algo deu errado. Ten
 export function getFieldErrors(error: unknown): Record<string, string> {
   if (axios.isAxiosError<ApiErrorBody>(error)) return error.response?.data?.fields ?? {};
   return {};
+}
+
+// Corpo de erro estruturado da API (inclui `code` e, em conflitos de compra, a nova `quote`).
+export function getErrorData(error: unknown): ApiErrorBody | null {
+  return axios.isAxiosError<ApiErrorBody>(error) ? (error.response?.data ?? null) : null;
+}
+
+export function isNetworkOrTimeout(error: unknown): boolean {
+  return axios.isAxiosError(error) && (!error.response || error.code === 'ECONNABORTED');
 }

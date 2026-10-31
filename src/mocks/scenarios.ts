@@ -9,6 +9,9 @@ export const SCENARIOS = [
   'offline', // falha de conexão em todas as chamadas
   'session-expired', // toda rota autenticada responde 401
   'favorites-fail', // favoritar/desfavoritar responde 500 (exercita o rollback)
+  'wallet-rejected', // a carteira recusa a conexão
+  'payment-declined', // o pedido termina recusado
+  'order-timeout', // o pedido é criado, mas a resposta demora mais que o timeout do cliente
 ] as const;
 
 export type Scenario = (typeof SCENARIOS)[number];

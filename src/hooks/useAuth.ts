@@ -2,9 +2,17 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { queryClient } from '../queryClient';
 import { tokenStore } from '../services/api';
 import * as authService from '../services/authService';
+import { mergeCart } from '../services/cartService';
 import type { Session, User } from '../services/types';
 
 export const sessionQueryKey = ['session'] as const;
+
+// Dados privados: somem do cache ao sair ou ao trocar de usuário.
+const PRIVATE_KEYS = ['favorites', 'cart', 'quote', 'wallets', 'orders', 'order'] as const;
+
+export function clearPrivateData() {
+  for (const key of PRIVATE_KEYS) queryClient.removeQueries({ queryKey: [key] });
+}
 
 async function loadSession(): Promise<User | null> {
   if (!tokenStore.get()) return null;
@@ -22,11 +30,17 @@ export function useSession() {
   return { user: query.data ?? null, isLoading: query.isPending };
 }
 
-function startSession({ token, user }: Session) {
+async function startSession({ token, user }: Session) {
   tokenStore.set(token);
   // Troca de usuário: descarta tudo que era privado da sessão anterior.
-  queryClient.removeQueries({ queryKey: ['favorites'] });
+  clearPrivateData();
   queryClient.setQueryData(sessionQueryKey, user);
+  // Os itens que o visitante já tinha no carrinho passam para a conta.
+  try {
+    await mergeCart();
+  } catch {
+    // se o merge falhar, o login continua válido; o carrinho da conta é carregado normalmente
+  }
 }
 
 export function useLogin() {
@@ -43,7 +57,7 @@ export function useLogout() {
     onSettled: () => {
       // Mesmo que a API falhe, a sessão local termina e os dados privados saem do cache.
       tokenStore.clear();
-      queryClient.removeQueries({ queryKey: ['favorites'] });
+      clearPrivateData();
       queryClient.setQueryData(sessionQueryKey, null);
     },
   });

@@ -2,29 +2,10 @@ import { http, HttpResponse } from 'msw';
 import { API_URL } from '../config';
 import { getDb, persist, sha256 } from './db';
 import type { StoredUser } from './db';
-import { getScenario, latencyFor, sleep } from './scenarios';
+import { getScenario } from './scenarios';
+import { commerceHandlers } from './commerceHandlers';
+import { currentUser, preflight, unauthorized } from './helpers';
 import type { NFT, SortKey } from '../services/types';
-
-// Latência simulada + falha de conexão quando o cenário pede.
-async function preflight(): Promise<Response | null> {
-  const scenario = getScenario();
-  await sleep(latencyFor(scenario));
-  if (scenario === 'offline') return HttpResponse.error();
-  return null;
-}
-
-async function currentUser(request: Request): Promise<StoredUser | null> {
-  if (getScenario() === 'session-expired') return null;
-  const header = request.headers.get('Authorization');
-  const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token) return null;
-  const db = await getDb();
-  const userId = db.sessions[token];
-  return db.users.find((user) => user.id === userId) ?? null;
-}
-
-const unauthorized = () =>
-  HttpResponse.json({ message: 'Sessão inválida ou expirada. Entre novamente.' }, { status: 401 });
 
 function sortItems(items: NFT[], sort: SortKey): NFT[] {
   const copy = [...items];
@@ -133,6 +114,16 @@ export const handlers = [
       passwordHash: await sha256(password),
     };
     db.users.push(user);
+    // Toda conta nova começa com uma carteira principal para que a compra funcione de imediato.
+    db.wallets[user.id] = [
+      {
+        id: `w-${user.id}`,
+        provider: 'MetaMask',
+        address: `0x${(await sha256(`addr:${user.id}`)).slice(0, 40)}`,
+        label: 'Principal',
+        primary: true,
+      },
+    ];
     return HttpResponse.json(await openSession(user), { status: 201 });
   }),
 
@@ -212,4 +203,7 @@ export const handlers = [
     persist();
     return HttpResponse.json({ ids: db.favorites[user.id] });
   }),
+
+  // ---------- Carrinho, cotação, carteiras e pedidos ----------
+  ...commerceHandlers,
 ];

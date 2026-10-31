@@ -4,10 +4,11 @@ import { Header } from '../Header';
 import { useNft } from '../../hooks/useNfts';
 import { useSession } from '../../hooks/useAuth';
 import { useFavorites, useToggleFavorite } from '../../hooks/useFavorites';
+import { useAddToCart } from '../../hooks/useCart';
 import { getErrorMessage, getStatus } from '../../services/api';
+import { MAX_PER_ORDER } from '../../services/types';
 
 const route = getRouteApi('/nft/$id');
-const MAX_PER_ORDER = 10;
 
 function DetailSkeleton() {
   return (
@@ -43,6 +44,7 @@ export function DetailPage() {
   const { user } = useSession();
   const favorites = useFavorites(user?.id);
   const toggleFavorite = useToggleFavorite(user?.id);
+  const addToCart = useAddToCart();
   const isFavorite = favorites.data?.includes(id) ?? false;
 
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
@@ -220,6 +222,19 @@ export function DetailPage() {
               </div>
 
               <div>
+                {addToCart.isSuccess && (
+                  <p role="status" className="text-sm text-emerald-400 mb-3">
+                    Adicionado ao carrinho.{' '}
+                    <Link to="/cart" className="underline hover:text-emerald-300">
+                      Ver carrinho
+                    </Link>
+                  </p>
+                )}
+                {addToCart.isError && (
+                  <p role="alert" className="text-sm text-red-300 mb-3">
+                    {getErrorMessage(addToCart.error, 'Não foi possível adicionar ao carrinho.')}
+                  </p>
+                )}
                 {toggleFavorite.isError && (
                   <p role="alert" className="text-sm text-red-300 mb-3">
                     {getErrorMessage(toggleFavorite.error, 'Não foi possível atualizar seus favoritos.')} A alteração foi desfeita.
@@ -227,12 +242,14 @@ export function DetailPage() {
                 )}
                 <div className="flex gap-4 pt-6 border-t border-amber-900/30">
                   {edition ? (
-                    <Link
-                      to="/cart"
-                      className="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-3 rounded-xl font-medium text-center transition shadow-lg shadow-amber-900/20"
+                    <button
+                      type="button"
+                      disabled={addToCart.isPending}
+                      onClick={() => addToCart.mutate({ nftId: id, edition: edition.label, quantity: safeQuantity })}
+                      className="flex-1 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 disabled:cursor-wait text-white py-3 rounded-xl font-medium text-center transition shadow-lg shadow-amber-900/20"
                     >
-                      Comprar
-                    </Link>
+                      {addToCart.isPending ? 'Adicionando…' : 'Adicionar ao carrinho'}
+                    </button>
                   ) : (
                     <span aria-disabled="true" className="flex-1 bg-black/30 text-amber-200/40 py-3 rounded-xl font-medium text-center">
                       Esgotado

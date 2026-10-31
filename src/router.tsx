@@ -93,6 +93,9 @@ const checkoutRoute = createRoute({
 const successRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/success',
+  validateSearch: (search: Record<string, unknown>): { order?: string } => ({
+    order: typeof search.order === 'string' && search.order ? search.order : undefined,
+  }),
   beforeLoad: requireAuth,
   component: Success,
 });

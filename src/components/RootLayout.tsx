@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet, useRouter } from '@tanstack/react-router';
 import { queryClient } from '../queryClient';
-import { sessionQueryKey } from '../hooks/useAuth';
+import { clearPrivateData, sessionQueryKey } from '../hooks/useAuth';
 import { SESSION_EXPIRED_EVENT } from '../services/api';
 
 const PRIVATE_PATHS = ['/checkout', '/profile', '/success'];
@@ -14,7 +14,7 @@ export function RootLayout() {
   useEffect(() => {
     function handleExpired() {
       queryClient.setQueryData(sessionQueryKey, null);
-      queryClient.removeQueries({ queryKey: ['favorites'] });
+      clearPrivateData();
       const { pathname, href } = router.state.location;
       if (PRIVATE_PATHS.some((path) => pathname.startsWith(path))) {
         router.history.push(`/login?redirect=${encodeURIComponent(href)}`);
