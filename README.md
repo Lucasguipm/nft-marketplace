@@ -1,32 +1,35 @@
-# React + TypeScript + Vite
+# 🎮 NFT Marketplace (Jungle Gaming)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> Plataforma web profissional de comércio de NFTs focada em arte digital e colecionáveis de jogos, desenvolvida como teste técnico de Frontend.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologias Utilizadas
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Este projeto foi construído utilizando uma stack moderna e orientada a boas práticas de mercado:
 
-## React Compiler
+* **React** + **TypeScript** — Tipagem estática robusta e componentes reativos.
+* **Vite** — Empacotador e servidor de desenvolvimento ultrarrápido.
+* **Tailwind CSS** — Estilização modular e design system responsivo em Dark Mode.
+* **TanStack Router** — Sistema de rotas tipado e baseado em árvore de navegação.
+* **Axios** — Cliente HTTP para integração com APIs e serviços remotos.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 🎨 Identidade Visual & Design System
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+O marketplace segue rigorosamente uma paleta de cores temática de alta fidelidade visual (Dark Mode com tons de âmbar e castanho):
+* **Fundo Principal**: `#110a05`
+* **Textos e Destaques**: `#e6d5c3` / `#b45309`
+* **Acabamentos**: Bordas em tons de âmbar escuro com efeito *glassmorphism*.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+---
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## 🧭 Módulos e Rotas da Aplicação
+
+1. **Início / Mercado (`/`)**: Catálogo dinâmico de NFTs em destaque e listagem completa.
+2. **Detalhes do NFT (`/details`)**: Galeria de visualização com miniaturas, informações do criador e seletor de edições.
+3. **Carrinho de Compras (`/cart`)**: Gestão de edições em tempo real, aplicação de cupom promocional (`KURIO10`) e cálculo dinâmico de taxas de rede.
+4. **Pagamento / Checkout (`/checkout`)**: Formulário de dados do colecionador, seleção de rede blockchain e provedor de carteira (MetaMask, Coinbase Wallet, WalletConnect).
+5. **Confirmação de Pedido (`/success`)**: Recibo detalhado da transação com hash simulado na blockchain.
+6. **Autenticação (`/login`)**: Sistema unificado de abas para **Entrar** e **Criar conta**, incluindo acessos sociais.
+7. **Perfil do Colecionador (`/profile`)**: Painel do utilizador com estatísticas de portefólio, gestão de carteiras Web3 e configurações de conta.
+
