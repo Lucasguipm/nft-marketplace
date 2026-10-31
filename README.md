@@ -4,6 +4,7 @@ Implementação parcial do desafio de frontend da Jungle Gaming: um marketplace 
 
 - **Aplicação publicada:** https://nft-marketplace-lgpm.vercel.app/
 - **Repositório:** https://github.com/Lucasguipm/nft-marketplace
+- **Prazo:** Recebi o email do teste às 17:47 do dia 29/10 e faço o último commit antes das 17:00 do dia 31/10, desta forma dentro do prazo de conclusão de 2 dias após o recebimento do email.
 
 > **Leia isto primeiro:** este projeto **não cobre todo o enunciado**. Faltam tempo real com Socket.IO, testes E2E com Playwright, auditoria Lighthouse, shadcn/ui e a edição de perfil e carteiras. A tabela abaixo diz exatamente o que funciona e o que não. Detalhes das decisões e das limitações estão em [ARCHITECTURE.md](./ARCHITECTURE.md).
 
@@ -147,3 +148,5 @@ src/
 ## Como este projeto foi feito
 
 As telas e o layout partiram do Figma e foram montados por mim. A camada de integração (TanStack Query, Axios, MSW, sessão, carrinho, cotação e pedido idempotente) foi construída com ajuda de uma IA (Claude), que usei como assistente, e eu revisei, testei e estou estudando esse código. Escrevo isso porque prefiro ser transparente sobre o que fiz sozinho e o que aprendi no caminho.
+
+Recebi o email do teste às 17:47 do dia 29/10 e faço o último commit antes das 17:00 do dia 31/10, desta forma dentro do prazo de conclusão de 2 dias após o recebimento do email.
